@@ -33,7 +33,7 @@ export async function POST(request: Request): Promise<Response> {
 semester_grid일 때만 상단의 '${currentGrade}학년' 영역과 그 안의 '${selectedSemester}학기' 세로 열 경계를 찾는다. 그 칸 경계 안에 중심점이 있는 독립된 과목 박스만 courses에 넣는다. 다른 학년, 다른 학기, 화면 하단 범례는 절대 넣지 않는다. 화살표로 연결됐더라도 목표 칸 밖이면 넣지 않는다. 여러 학년 열에 걸친 긴 과목 막대도 버리지 않는다. 예를 들어 '건축설계현장실습(2, A, 2B, 2C 4과목 중 1회 이상 필수)'은 printedCourseName='건축설계현장실습', placementType=range, fromGrade=2, toGrade=5, fromSemester=null, toSemester=null로 반환한다. 단순 설명문은 과목으로 만들지 않는다. 각 과목의 sourceEvidence에는 확인한 위치를 짧게 적는다. 실제 학기 칸이 보일 때만 placementType=exact로 기록한다. 학년만 보이면 year_only, 여러 학년에 걸치면 range, 위치를 판단할 수 없으면 unspecified로 기록하며 값을 추정하지 않는다. 이미지에 인쇄된 과목명을 사용하되 긴 막대의 괄호 안 이수조건은 과목명에서 분리한다. 중복은 제거한다. 경계에 걸치거나 글자가 불명확하면 uncertain=true와 이유를 남긴다. 이미지에 없는 과목을 만들지 않는다.`;
   let response: Response;
   const primaryModel = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
-  const fallbackModel = process.env.GEMINI_FALLBACK_MODEL?.trim() || "gemini-2.5-flash-lite";
+  const fallbackModel = process.env.GEMINI_FALLBACK_MODEL?.trim() || "gemini-3.1-flash-lite";
   const requestPayload = { model: primaryModel, store: false, input: [{ type: "text", text: prompt }, { type: "image", data: Buffer.from(await image.arrayBuffer()).toString("base64"), mime_type: image.type }], response_format: { type: "text", mime_type: "application/json", schema }, generation_config: { thinking_level: "low" } };
   try {
     response = await fetchGeminiWithFallback(apiKey, requestPayload, fallbackModel);

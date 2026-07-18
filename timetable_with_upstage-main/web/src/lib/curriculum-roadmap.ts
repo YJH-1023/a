@@ -69,7 +69,7 @@ function parseCourse(raw: unknown, index: number): RoadmapCourse {
   return { id: typeof raw.id === "string" ? raw.id : `course-${index + 1}`, printedCourseName: text(raw.printedCourseName)!, curriculumCategory: text(raw.curriculumCategory), trackName: text(raw.trackName), placement, reviewStatus: raw.uncertain === false || raw.reviewStatus === "verified" ? "verified" : "needs_review", reviewReasons: texts(raw.uncertaintyReasons ?? raw.reviewReasons) };
 }
 function applies(p: RoadmapPlacement, c: RoadmapContext): boolean { if (p.type === "exact") return p.grade === c.currentGrade && p.semester === c.semester; if (p.type === "year_only") return p.grade === c.currentGrade; if (p.type === "unspecified") return false; const n=c.currentGrade*10+c.semester; return n >= p.fromGrade*10+(p.fromSemester??1) && n <= p.toGrade*10+(p.toSemester??2); }
-function normalize(v: string): string { return v.normalize("NFKC").replace(/\s+/g, "").replace(/\(선택\)$/u, "").toLowerCase(); }
+function normalize(v: string): string { return v.normalize("NFKC").replace(/\((?:선택|학석|학사|대학원)\)$/u, "").replace(/[\s·ㆍ,:/\\_-]+/g, "").toLowerCase(); }
 function record(v: unknown): v is Record<string, unknown> { return typeof v === "object" && v !== null && !Array.isArray(v); }
 function integer(v: unknown): number | null { return typeof v === "number" && Number.isInteger(v) ? v : null; }
 function term(v: unknown): 1 | 2 | null { return v === 1 || v === 2 ? v : null; }

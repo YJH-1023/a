@@ -81,8 +81,10 @@ export function PlanningWorkspace() {
         onConfirmedProfileChange={updateConfirmedProfile}
       />
       <CurriculumRoadmapManager
-        academicYear={studentProfile.admissionYear}
-        programCode={studentProfile.departmentCode}
+        academicYear={appliedProfile?.admissionYear ?? null}
+        programCode={appliedProfile?.departmentCode ?? ""}
+        currentGrade={appliedProfile?.currentGrade ?? null}
+        semester={appliedProfile?.courseTerm === 10 ? 1 : appliedProfile?.courseTerm === 20 ? 2 : null}
         onChange={setCurriculumRoadmap}
       />
       <TimetablePlanner

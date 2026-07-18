@@ -31,6 +31,7 @@ export function CurriculumRoadmapManager({ academicYear, programCode, currentGra
         placement: { type: "exact", grade: currentGrade, semester },
         reviewStatus: "needs_review",
         reviewReasons: ["사용자가 직접 추가한 과목"],
+        sourceEvidence: null,
       }],
     });
   }

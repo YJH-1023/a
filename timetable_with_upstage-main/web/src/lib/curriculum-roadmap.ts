@@ -12,10 +12,11 @@ export interface RoadmapCourse {
   placement: RoadmapPlacement;
   reviewStatus: "verified" | "needs_review";
   reviewReasons: string[];
+  sourceEvidence: string | null;
 }
 
 export interface CurriculumRoadmap {
-  schemaVersion: "1.0";
+  schemaVersion: "1.1";
   sourceDocumentId: string;
   status: "draft" | "confirmed";
   academicYear: number | null;
@@ -31,7 +32,7 @@ export interface RoadmapContext { programCode: string; admissionYear: number; cu
 export function parseCurriculumRoadmap(value: unknown): CurriculumRoadmap {
   if (!record(value) || !Array.isArray(value.courses)) throw new Error("invalid roadmap");
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     sourceDocumentId: typeof value.sourceDocumentId === "string" ? value.sourceDocumentId : crypto.randomUUID(),
     status: value.status === "confirmed" ? "confirmed" : "draft",
     academicYear: integer(value.academicYear), programCode: text(value.programCode), programName: text(value.programName),
@@ -42,6 +43,31 @@ export function parseCurriculumRoadmap(value: unknown): CurriculumRoadmap {
 
 export function confirmCurriculumRoadmap(value: CurriculumRoadmap): CurriculumRoadmap {
   return { ...value, status: "confirmed", reviewReasons: [], courses: value.courses.map((course) => ({ ...course, reviewStatus: "verified", reviewReasons: [] })) };
+}
+
+/** Keep only courses visibly placed in the requested grade/semester cell. */
+export function validateRoadmapForTarget(
+  value: CurriculumRoadmap,
+  context: Pick<RoadmapContext, "currentGrade" | "semester">,
+): CurriculumRoadmap {
+  const seen = new Set<string>();
+  const courses = value.courses.flatMap((course) => {
+    const key = normalize(course.printedCourseName);
+    if (!key || seen.has(key)) return [];
+    if (course.placement.type !== "exact") return [];
+    if (course.placement.grade !== context.currentGrade || course.placement.semester !== context.semester) return [];
+    seen.add(key);
+    return [course];
+  });
+  const removed = value.courses.length - courses.length;
+  return {
+    ...value,
+    status: "draft",
+    courses,
+    reviewReasons: removed > 0
+      ? [...value.reviewReasons, `${removed}개 항목은 선택 학년·학기 근거가 없어 제외됨`]
+      : value.reviewReasons,
+  };
 }
 
 export function updateRoadmapCourse(value: CurriculumRoadmap, id: string, patch: Partial<RoadmapCourse>): CurriculumRoadmap {
@@ -66,7 +92,7 @@ function parseCourse(raw: unknown, index: number): RoadmapCourse {
   if (type === "exact" && grade !== null && semester !== null) placement = { type, grade, semester };
   else if (type === "year_only" && grade !== null) placement = { type, grade, semester: null };
   else if (type === "range" && integer(raw.fromGrade) !== null && integer(raw.toGrade) !== null) placement = { type, fromGrade: integer(raw.fromGrade)!, fromSemester: term(raw.fromSemester), toGrade: integer(raw.toGrade)!, toSemester: term(raw.toSemester) };
-  return { id: typeof raw.id === "string" ? raw.id : `course-${index + 1}`, printedCourseName: text(raw.printedCourseName)!, curriculumCategory: text(raw.curriculumCategory), trackName: text(raw.trackName), placement, reviewStatus: raw.uncertain === false || raw.reviewStatus === "verified" ? "verified" : "needs_review", reviewReasons: texts(raw.uncertaintyReasons ?? raw.reviewReasons) };
+  return { id: typeof raw.id === "string" ? raw.id : `course-${index + 1}`, printedCourseName: text(raw.printedCourseName)!, curriculumCategory: text(raw.curriculumCategory), trackName: text(raw.trackName), placement, reviewStatus: raw.uncertain === false || raw.reviewStatus === "verified" ? "verified" : "needs_review", reviewReasons: texts(raw.uncertaintyReasons ?? raw.reviewReasons), sourceEvidence: text(raw.sourceEvidence) };
 }
 function normalize(v: string): string { return v.normalize("NFKC").replace(/\((?:선택|학석|학사|대학원)\)$/u, "").replace(/[\s·ㆍ,:/\\_()\[\]-]+/g, "").toLowerCase(); }
 function record(v: unknown): v is Record<string, unknown> { return typeof v === "object" && v !== null && !Array.isArray(v); }

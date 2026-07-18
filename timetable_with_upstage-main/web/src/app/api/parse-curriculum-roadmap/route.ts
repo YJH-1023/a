@@ -3,7 +3,6 @@ import { parseCurriculumRoadmap, validateRoadmapForTarget } from "../../../lib/c
 // Inline `type: image` input is currently exposed by the REST v1beta endpoint.
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/interactions";
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
-const MAX_GEMINI_ATTEMPTS = 3;
 export const maxDuration = 60;
 const schema = { type: "object", additionalProperties: false,
   required: ["academicYear", "programCode", "programName", "layoutType", "courses", "reviewReasons"],
@@ -33,9 +32,11 @@ export async function POST(request: Request): Promise<Response> {
 먼저 레이아웃을 판정하라. 학년과 1학기/2학기 헤더가 모두 명시된 경우만 layoutType=semester_grid이다. 건축학과처럼 1학년~5학년 열만 있고 학기 헤더가 없으면 layoutType=year_grid이며, 이때 과목을 특정 학기로 추정하지 않는다. 선택 학년에 놓인 독립 과목은 placementType=year_only, grade=${currentGrade}, semester=null로 반환한다.
 semester_grid일 때만 상단의 '${currentGrade}학년' 영역과 그 안의 '${selectedSemester}학기' 세로 열 경계를 찾는다. 그 칸 경계 안에 중심점이 있는 독립된 과목 박스만 courses에 넣는다. 다른 학년, 다른 학기, 화면 하단 범례는 절대 넣지 않는다. 화살표로 연결됐더라도 목표 칸 밖이면 넣지 않는다. 여러 학년 열에 걸친 긴 과목 막대도 버리지 않는다. 예를 들어 '건축설계현장실습(2, A, 2B, 2C 4과목 중 1회 이상 필수)'은 printedCourseName='건축설계현장실습', placementType=range, fromGrade=2, toGrade=5, fromSemester=null, toSemester=null로 반환한다. 단순 설명문은 과목으로 만들지 않는다. 각 과목의 sourceEvidence에는 확인한 위치를 짧게 적는다. 실제 학기 칸이 보일 때만 placementType=exact로 기록한다. 학년만 보이면 year_only, 여러 학년에 걸치면 range, 위치를 판단할 수 없으면 unspecified로 기록하며 값을 추정하지 않는다. 이미지에 인쇄된 과목명을 사용하되 긴 막대의 괄호 안 이수조건은 과목명에서 분리한다. 중복은 제거한다. 경계에 걸치거나 글자가 불명확하면 uncertain=true와 이유를 남긴다. 이미지에 없는 과목을 만들지 않는다.`;
   let response: Response;
-  const requestBody = JSON.stringify({ model: process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash", store: false, input: [{ type: "text", text: prompt }, { type: "image", data: Buffer.from(await image.arrayBuffer()).toString("base64"), mime_type: image.type }], response_format: { type: "text", mime_type: "application/json", schema }, generation_config: { thinking_level: "minimal" } });
+  const primaryModel = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
+  const fallbackModel = process.env.GEMINI_FALLBACK_MODEL?.trim() || "gemini-2.5-flash-lite";
+  const requestPayload = { model: primaryModel, store: false, input: [{ type: "text", text: prompt }, { type: "image", data: Buffer.from(await image.arrayBuffer()).toString("base64"), mime_type: image.type }], response_format: { type: "text", mime_type: "application/json", schema }, generation_config: { thinking_level: "minimal" } };
   try {
-    response = await fetchGeminiWithRetry(apiKey, requestBody);
+    response = await fetchGeminiWithFallback(apiKey, requestPayload, fallbackModel);
   } catch { return fail(502, "Gemini 비전 API에 연결하지 못했습니다."); }
   if (!response.ok) return geminiFailure(response);
   try {
@@ -77,39 +78,20 @@ function outputText(body: unknown): string | null {
 function stripJsonFence(value: string): string {
   return value.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
 }
-async function fetchGeminiWithRetry(apiKey: string, body: string): Promise<Response> {
+async function fetchGeminiWithFallback(apiKey: string, payload: Record<string, unknown>, fallbackModel: string): Promise<Response> {
+  const primaryModel = String(payload.model ?? "");
+  const models = fallbackModel && fallbackModel !== primaryModel ? [primaryModel, fallbackModel] : [primaryModel];
   let response: Response | null = null;
-  for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt += 1) {
+  for (const model of models) {
     response = await fetch(GEMINI_URL, {
       method: "POST",
       headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
       cache: "no-store",
-      body,
+      body: JSON.stringify({ ...payload, model }),
     });
-    if (response.status !== 429 && response.status < 500) return response;
-    if (attempt === MAX_GEMINI_ATTEMPTS - 1) return response;
-    await delay(await retryDelayMs(response, attempt));
+    if (response.status !== 429) return response;
   }
   return response!;
-}
-
-async function retryDelayMs(response: Response, attempt: number): Promise<number> {
-  const retryAfter = response.headers.get("retry-after");
-  if (retryAfter) {
-    const seconds = Number(retryAfter);
-    if (Number.isFinite(seconds)) return Math.min(Math.max(seconds * 1000, 1000), 10_000);
-  }
-  try {
-    const body: unknown = await response.clone().json();
-    if (record(body) && record(body.error) && Array.isArray(body.error.details)) {
-      for (const detail of body.error.details) {
-        if (!record(detail) || typeof detail.retryDelay !== "string") continue;
-        const match = detail.retryDelay.match(/([\d.]+)s/);
-        if (match) return Math.min(Math.max(Number(match[1]) * 1000, 1000), 10_000);
-      }
-    }
-  } catch { /* use exponential fallback */ }
-  return 1_000 * (2 ** attempt) + Math.floor(Math.random() * 300);
 }
 
 async function geminiFailure(response: Response): Promise<Response> {
@@ -123,7 +105,6 @@ async function geminiFailure(response: Response): Promise<Response> {
   }
   return fail(502, `Gemini 비전 분석에 실패했습니다. (${response.status})${providerMessage ? ` ${providerMessage}` : ""}`);
 }
-function delay(ms: number): Promise<void> { return new Promise((resolve) => setTimeout(resolve, ms)); }
 function nullable(type: "integer" | "string") { return { type: [type, "null"] }; }
 function term() { return { type: ["integer", "null"], enum: [1, 2, null] }; }
 function strings() { return { type: "array", items: { type: "string" } }; }

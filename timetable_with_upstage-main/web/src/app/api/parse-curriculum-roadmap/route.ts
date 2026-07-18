@@ -23,20 +23,49 @@ export async function POST(request: Request): Promise<Response> {
   let response: Response;
   try {
     response = await fetch(GEMINI_URL, { method: "POST", headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" }, cache: "no-store",
-      body: JSON.stringify({ model: "gemini-3.5-flash", input: [{ type: "text", text: prompt }, { type: "image", data: Buffer.from(await image.arrayBuffer()).toString("base64"), mime_type: image.type }], response_format: { type: "text", mime_type: "application/json", schema }, generation_config: { thinking_level: "minimal" } }),
+      body: JSON.stringify({ model: "gemini-3.5-flash", store: false, input: [{ type: "text", text: prompt }, { type: "image", data: Buffer.from(await image.arrayBuffer()).toString("base64"), mime_type: image.type }], response_format: { type: "text", mime_type: "application/json", schema }, generation_config: { thinking_level: "minimal" } }),
     });
   } catch { return fail(502, "Gemini 비전 API에 연결하지 못했습니다."); }
   if (!response.ok) return fail(502, `Gemini 비전 분석에 실패했습니다. (${response.status})`);
   try {
     const output = outputText(await response.json());
     if (!output) return fail(502, "Gemini 응답에서 정규화 JSON을 찾지 못했습니다.");
-    const roadmap = parseCurriculumRoadmap({ ...JSON.parse(output), sourceDocumentId: crypto.randomUUID(), status: "draft" });
+    const parsedOutput: unknown = JSON.parse(stripJsonFence(output));
+    if (!record(parsedOutput)) return fail(502, "Gemini 로드맵 JSON이 객체 형식이 아닙니다.");
+    const selectedYear = Number(form.get("academicYear"));
+    const selectedCode = String(form.get("programCode") ?? "").trim();
+    const roadmap = parseCurriculumRoadmap({
+      ...parsedOutput,
+      academicYear: Number.isInteger(selectedYear) ? selectedYear : parsedOutput.academicYear,
+      programCode: selectedCode || parsedOutput.programCode,
+      sourceDocumentId: crypto.randomUUID(),
+      status: "draft",
+    });
     const courses = roadmap.courses.filter((course) => course.placement.type !== "unspecified");
     if (!courses.length) return fail(422, "과목명은 읽었지만 학년·학기 위치를 판별하지 못했습니다. 회전되지 않은 고해상도 학과 한 페이지 이미지를 올려 주세요.");
     return Response.json({ roadmap: { ...roadmap, courses } });
   } catch { return fail(502, "Gemini 로드맵 정규화 결과를 검증하지 못했습니다."); }
 }
-function outputText(body: unknown): string | null { if (!record(body)) return null; if (typeof body.output_text === "string") return body.output_text; if (!Array.isArray(body.outputs)) return null; for (const output of body.outputs) if (record(output) && Array.isArray(output.content)) for (const content of output.content) if (record(content) && typeof content.text === "string") return content.text; return null; }
+function outputText(body: unknown): string | null {
+  if (!record(body)) return null;
+  if (typeof body.output_text === "string") return body.output_text;
+  const containers = [body.steps, body.outputs, body.output];
+  for (const container of containers) {
+    if (!Array.isArray(container)) continue;
+    for (const step of container) {
+      if (!record(step) || !Array.isArray(step.content)) continue;
+      for (const content of step.content) {
+        if (record(content) && typeof content.text === "string" && content.text.trim()) {
+          return content.text;
+        }
+      }
+    }
+  }
+  return null;
+}
+function stripJsonFence(value: string): string {
+  return value.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+}
 function nullable(type: "integer" | "string") { return { type: [type, "null"] }; }
 function term() { return { type: ["integer", "null"], enum: [1, 2, null] }; }
 function strings() { return { type: "array", items: { type: "string" } }; }

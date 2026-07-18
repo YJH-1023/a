@@ -71,6 +71,7 @@ export function PlanningWorkspace() {
         profile={studentProfile}
         onApply={(profile) => {
           setAppliedProfile({ ...profile });
+          setCurriculumRoadmap(null);
           track("profile_applied");
         }}
         onChange={setStudentProfile}

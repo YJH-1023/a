@@ -261,8 +261,8 @@
   border-bottom: 0;
 }
 
-.roadmapCourse { background: color-mix(in srgb, var(--accent-strong) 14%, var(--surface-card)); border-left: 4px solid var(--accent-strong); }
-.roadmapBadge { display:inline-block; margin-left:7px; padding:2px 6px; border-radius:999px; background:var(--accent-strong); color:white; font-size:9px; font-weight:800; }
+.roadmapCourse { background:#fff3bf; border-left:5px solid #f59f00; box-shadow:inset 0 0 0 1px #ffd43b; }
+.roadmapBadge { display:inline-block; margin-left:7px; padding:2px 7px; border-radius:999px; background:#f59f00; color:#1f2937; font-size:9px; font-weight:800; }
 
 .courseCatalogItem .courseToggle {
   border-bottom: 0;

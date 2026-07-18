@@ -5,7 +5,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { Requirement } from "@/lib/academic-profile";
 import { selectAiFillerSubjects } from "@/lib/ai-filler-selection";
 import { markSessionCompleted, track } from "@/lib/analytics";
-import { getRoadmapMatch, isRoadmapFilterActive, type CurriculumRoadmap, type RoadmapContext } from "@/lib/curriculum-roadmap";
+import { getRoadmapMatch, type CurriculumRoadmap, type RoadmapContext } from "@/lib/curriculum-roadmap";
 import {
   courseGroupsFromCollection,
   shouldShowSectionDetails,
@@ -594,14 +594,8 @@ export function TimetablePlanner({ query, queryLabel, excludedCourseNumbers, req
     );
   }, [courseSearch, formatFilteredCourseGroups]);
   const visibleMajorCourseGroups = useMemo(
-    () =>
-      visibleCourseGroups.filter(
-        (group) =>
-          group.source === "major" &&
-          (!isRoadmapFilterActive(roadmapContext, curriculumRoadmap) ||
-            Boolean(getRoadmapMatch(group.title, roadmapContext, curriculumRoadmap))),
-      ),
-    [visibleCourseGroups, roadmapContext, curriculumRoadmap],
+    () => visibleCourseGroups.filter((group) => group.source === "major"),
+    [visibleCourseGroups],
   );
   const visibleElectiveSubjects = useMemo(() => {
     const availableSubjects = electiveSubjects.filter(

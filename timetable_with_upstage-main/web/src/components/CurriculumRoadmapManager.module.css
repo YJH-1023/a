@@ -2,6 +2,7 @@
 .card h2,.card p { margin:0; } .card button { width:max-content; padding:10px 14px; border:0; border-radius:10px; background:var(--accent-strong); color:white; font-weight:700; cursor:pointer; }
 .card button:disabled { opacity:.45; cursor:not-allowed; } .eyebrow { color:var(--accent-strong); font-size:12px; font-weight:800; } .consent { font-size:13px; }
 .result { display:grid; gap:12px; padding-top:14px; border-top:1px solid var(--border-subtle); } .rows { display:grid; gap:7px; max-height:420px; overflow:auto; }
-.row { display:grid; grid-template-columns:minmax(180px,1fr) 110px 70px 100px 58px; gap:6px; } .row input,.row select { min-width:0; padding:7px; border:1px solid var(--border-subtle); border-radius:7px; background:var(--surface-card); color:var(--text-primary); }
+.row { display:grid; grid-template-columns:minmax(180px,1fr) 58px; gap:6px; } .row input,.row select { min-width:0; padding:7px; border:1px solid var(--border-subtle); border-radius:7px; background:var(--surface-card); color:var(--text-primary); }
 .row button { padding:6px; background:transparent; color:var(--text-secondary); border:1px solid var(--border-subtle); } .warning,.error { font-size:12px; } .warning { color:var(--text-secondary); } .error { color:#b42318; }
+.addCourseButton { background:transparent !important; color:var(--accent-strong) !important; border:1px dashed var(--accent-strong) !important; }
 @media (max-width:700px) { .row { grid-template-columns:1fr 1fr; } }

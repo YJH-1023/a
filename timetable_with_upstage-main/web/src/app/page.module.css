@@ -1,0 +1,45 @@
+.page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  padding: 72px clamp(20px, 6vw, 96px) 96px;
+  background: var(--surface-page);
+  color: var(--text-primary);
+}
+
+.hero {
+  max-width: 720px;
+  margin: 0 auto 48px;
+}
+
+.eyebrow {
+  margin-bottom: 14px;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.hero h1 {
+  margin-bottom: 16px;
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.12;
+  letter-spacing: -0.06em;
+}
+
+.hero p:last-child {
+  max-width: 560px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-top: 44px;
+  }
+
+  .hero {
+    margin-bottom: 32px;
+  }
+}

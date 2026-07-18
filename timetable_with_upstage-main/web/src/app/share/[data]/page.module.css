@@ -1,0 +1,17 @@
+.cardList {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+  margin: 0 auto;
+  list-style: none;
+}
+
+.backLink {
+  display: block;
+  max-width: 720px;
+  margin: 32px auto 0;
+  color: var(--accent-strong);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}

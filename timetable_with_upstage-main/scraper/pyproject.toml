@@ -1,0 +1,26 @@
+[project]
+name = "skku-scraper"
+version = "0.1.0"
+description = "성균관대 개설강좌 수집기 (시딩용, 서비스의 조연)"
+requires-python = ">=3.12"
+dependencies = ["requests>=2.32"]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.8.4", "pytest>=8.3"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["skku_scraper*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

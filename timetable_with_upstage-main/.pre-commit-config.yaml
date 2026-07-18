@@ -1,0 +1,41 @@
+# 커밋 전 자동 검사. 설치: pip install pre-commit && pre-commit install
+# 이후 매 커밋마다 아래 훅이 자동 실행되고, 실패하면 커밋이 막힌다.
+
+repos:
+  # ─── 공통: 기본 위생 ───
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: detect-private-key # API 키·비밀키 커밋 차단 (보안 필수)
+
+  # ─── Python (scraper/) ───
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff # 린터 (규칙 위반 시 에러)
+        args: ["--fix"]
+        files: ^scraper/
+      - id: ruff-format # 포매터
+        files: ^scraper/
+
+  # ─── TypeScript (web/) ───
+  # 로컬 도구를 쓰므로 system 훅으로 실행 (web/에 의존성 설치돼 있어야 함)
+  - repo: local
+    hooks:
+      - id: web-lint
+        name: web eslint
+        entry: bash -c 'cd web && npm run lint'
+        language: system
+        files: ^web/.*\.(ts|tsx)$
+        pass_filenames: false
+      - id: web-typecheck
+        name: web typecheck
+        entry: bash -c 'cd web && npm run typecheck'
+        language: system
+        files: ^web/.*\.(ts|tsx)$
+        pass_filenames: false

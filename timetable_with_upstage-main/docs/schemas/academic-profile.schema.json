@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skku-timetable.local/schemas/academic-profile.schema.json",
+  "title": "AcademicProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "profile",
+    "sourceDocuments",
+    "completedCourses",
+    "requirements",
+    "reviewIssues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "profile": { "$ref": "#/$defs/profile" },
+    "sourceDocuments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sourceDocument" }
+    },
+    "completedCourses": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/completedCourse" }
+    },
+    "requirements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/requirement" }
+    },
+    "reviewIssues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/reviewIssue" }
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["departmentCode", "majorCodes", "admissionYear", "currentGrade", "primaryCampus"],
+      "properties": {
+        "departmentCode": { "type": ["string", "null"] },
+        "majorCodes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "admissionYear": { "type": ["integer", "null"], "minimum": 2000, "maximum": 2100 },
+        "currentGrade": { "type": ["integer", "null"], "minimum": 1, "maximum": 7 },
+        "primaryCampus": {
+          "type": ["string", "null"],
+          "enum": ["humanities", "natural_sciences", null]
+        }
+      }
+    },
+    "sourceDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["course_history", "graduation_requirements"] },
+        "status": { "enum": ["draft", "confirmed"] }
+      }
+    },
+    "completedCourse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "courseCode",
+        "courseName",
+        "majorScope",
+        "classification",
+        "year",
+        "term",
+        "credits",
+        "area",
+        "completionStatus",
+        "recommendationPolicy",
+        "flags",
+        "sourceDocumentId",
+        "reviewReasons"
+      ],
+      "properties": {
+        "courseCode": { "type": "string", "pattern": "^[A-Z]{2,6}[0-9]{3,4}$" },
+        "courseName": { "type": "string", "minLength": 1 },
+        "majorScope": { "type": "string" },
+        "classification": { "type": "string" },
+        "year": { "type": ["integer", "null"], "minimum": 2000, "maximum": 2100 },
+        "term": {
+          "type": ["string", "null"],
+          "enum": ["spring", "summer", "fall", "winter", null]
+        },
+        "credits": { "type": "number", "minimum": 0 },
+        "area": { "type": "string" },
+        "completionStatus": { "enum": ["earned", "failed", "withdrawn", "review"] },
+        "recommendationPolicy": { "enum": ["exclude", "retake"] },
+        "flags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "sourceDocumentId": { "type": "string", "minLength": 1 },
+        "reviewReasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirementId",
+        "scope",
+        "label",
+        "rule",
+        "earnedCredits",
+        "inProgressCredits",
+        "remainingCredits",
+        "status",
+        "rawValues",
+        "sourceDocumentId",
+        "reviewReasons"
+      ],
+      "properties": {
+        "requirementId": { "type": "string", "minLength": 1 },
+        "scope": { "enum": ["primary_major", "general", "ds", "university", "other"] },
+        "label": { "type": "string", "minLength": 1 },
+        "rule": { "$ref": "#/$defs/requirementRule" },
+        "earnedCredits": { "type": ["number", "null"], "minimum": 0 },
+        "inProgressCredits": { "$ref": "#/$defs/inProgressCredits" },
+        "remainingCredits": { "type": ["number", "null"], "minimum": 0 },
+        "status": { "enum": ["satisfied", "in_progress", "unmet", "review"] },
+        "rawValues": { "type": "object", "additionalProperties": { "type": "string" } },
+        "sourceDocumentId": { "type": "string", "minLength": 1 },
+        "reviewReasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "requirementRule": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "credits"],
+          "properties": {
+            "kind": { "const": "credit_minimum" },
+            "credits": { "type": "number", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "groupId",
+            "totalAreas",
+            "minimumAreas",
+            "totalCredits",
+            "rawText"
+          ],
+          "properties": {
+            "kind": { "const": "distribution_minimum" },
+            "groupId": { "type": "string", "minLength": 1 },
+            "totalAreas": { "type": "integer", "minimum": 1 },
+            "minimumAreas": { "type": "integer", "minimum": 1 },
+            "totalCredits": { "type": "number", "minimum": 0 },
+            "rawText": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "rawText"],
+          "properties": {
+            "kind": { "enum": ["completion", "manual"] },
+            "rawText": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "inProgressCredits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spring", "summer", "fall", "winter", "total"],
+      "properties": {
+        "spring": { "type": "number", "minimum": 0 },
+        "summer": { "type": "number", "minimum": 0 },
+        "fall": { "type": "number", "minimum": 0 },
+        "winter": { "type": "number", "minimum": 0 },
+        "total": { "type": "number", "minimum": 0 }
+      }
+    },
+    "reviewIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "sourceDocumentId"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "sourceDocumentId": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

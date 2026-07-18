@@ -1,0 +1,4 @@
+# 모든 파일의 PR에 자동으로 재성님을 리뷰어로 지정합니다.
+# GitHub Branch Protection의 "Require a pull request before merging"과 함께 쓰면,
+# 조원이 올린 PR도 재성님 승인 없이는 main에 merge되지 않습니다.
+* @jaeseonghong-a11y

@@ -1,0 +1,55 @@
+# ─── 보안: 절대 커밋 금지 (교안 §8 필수 규칙) ───
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+**/apikey*
+**/api_key*
+
+# ─── 개인정보: 사용자 학사문서 원본 커밋 금지 ───
+private/
+docs/정보광장-*
+docs/졸업요건*
+
+# ─── Node / Next.js (web/) ───
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── Python (scraper/) ───
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ─── 수집 데이터 (대용량·상시 미러링 방지) ───
+# 샘플/스키마는 커밋 OK, 대량 수집 결과는 제외
+scraper/data/*.json
+!scraper/data/sample.json
+!scraper/data/schema.json
+
+# ─── OS / 에디터 ───
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.egg-info/
+
+.vercel
+.env*

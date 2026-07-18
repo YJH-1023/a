@@ -1,0 +1,52 @@
+{
+  // ─── 저장할 때마다 자동 실행 (네가 원한 "저장 시 자동 검사") ───
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  // ─── Python (scraper/) : Ruff 를 포매터·린터로 ───
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+
+  // ─── TypeScript / JavaScript (web/) : Prettier + ESLint ───
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "eslint.workingDirectories": ["web"],
+
+  // ─── 파일 위생 ───
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  // ─── 검색·탐색에서 제외 (노이즈 감소) ───
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/.ruff_cache": true,
+    "**/*.egg-info": true
+  },
+
+  // ─── 한글 파일명·마크다운 편하게 ───
+  "files.encoding": "utf8",
+  "markdown.preview.fontSize": 14
+}

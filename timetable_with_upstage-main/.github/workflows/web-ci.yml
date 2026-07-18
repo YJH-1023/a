@@ -1,0 +1,30 @@
+name: web CI
+
+# push·PR 시 web 코드가 바뀌면 자동으로 린트·타입체크·테스트 (CI gate)
+on:
+  push:
+    paths: ["web/**", ".github/workflows/web-ci.yml"]
+  pull_request:
+    paths: ["web/**", ".github/workflows/web-ci.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - name: 의존성 설치
+        run: npm ci
+      - name: 린트 (eslint)
+        run: npm run lint
+      - name: 타입체크 (tsc)
+        run: npm run typecheck
+      - name: 테스트 (vitest)
+        run: npm run test

@@ -1,0 +1,20 @@
+{
+  // 이 프로젝트에 권장되는 확장. 폴더를 처음 여는 사람에게 VS Code가 설치를 안내한다.
+  // (조원이 같은 환경을 쉽게 맞추도록)
+  "recommendations": [
+    // ─── Python (scraper/) ───
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+
+    // ─── TypeScript / web ───
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+
+    // ─── Git / 협업 ───
+    "github.vscode-pull-request-github",
+
+    // ─── 문서 편하게 보기 ───
+    "yzhang.markdown-all-in-one"
+  ]
+}

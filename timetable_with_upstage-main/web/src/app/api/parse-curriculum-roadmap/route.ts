@@ -1,6 +1,7 @@
 import { parseCurriculumRoadmap, validateRoadmapForTarget } from "../../../lib/curriculum-roadmap";
 
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1/interactions";
+// Inline `type: image` input is currently exposed by the REST v1beta endpoint.
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/interactions";
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_GEMINI_ATTEMPTS = 3;
 export const maxDuration = 60;

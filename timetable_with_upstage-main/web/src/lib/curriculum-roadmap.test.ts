@@ -18,13 +18,15 @@ describe("curriculum roadmap", () => {
     const roadmap = confirmCurriculumRoadmap(validateRoadmapForTarget(parsed, { currentGrade: 3, semester: 1 }));
     expect(getRoadmapMatch("공학수치해석", { programCode: "316321", admissionYear: 2025, currentGrade: 3, semester: 1 }, roadmap)).toBeNull();
   });
-  it("rejects model output that is not explicitly placed in the requested cell", () => {
+  it("rejects another term but keeps applicable year-only and range courses", () => {
     const roadmap = parseCurriculumRoadmap({ ...extracted, courses: [
       extracted.courses[0],
       { ...extracted.courses[0], printedCourseName: "다른학기과목", semester: 2 },
       { ...extracted.courses[0], printedCourseName: "학년만있는과목", placementType: "year_only", semester: null },
+      { ...extracted.courses[0], printedCourseName: "건축설계현장실습", placementType: "range", grade: null, semester: null, fromGrade: 2, toGrade: 5 },
+      { ...extracted.courses[0], printedCourseName: "1학년범위과목", placementType: "range", grade: null, semester: null, fromGrade: 1, toGrade: 1 },
     ] });
     const validated = validateRoadmapForTarget(roadmap, { currentGrade: 3, semester: 1 });
-    expect(validated.courses.map((course) => course.printedCourseName)).toEqual(["공학수치해석"]);
+    expect(validated.courses.map((course) => course.printedCourseName)).toEqual(["공학수치해석", "학년만있는과목", "건축설계현장실습"]);
   });
 });

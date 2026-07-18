@@ -43,6 +43,9 @@ export function CurriculumRoadmapManager({ academicYear, programCode, currentGra
     {error ? <p className={styles.error}>{error}</p> : null}
     {roadmap ? <div className={styles.result}>
       <p><strong>{roadmap.programName ?? "학과명 미확인"}</strong> · {currentGrade ?? "-"}학년 {semester ?? "-"}학기 · 해당 과목 {roadmap.courses.length}개 · {roadmap.status === "confirmed" ? "확정됨" : "검토 필요"}</p>
+      {roadmap.courses.some((course) => course.placement.type === "year_only" || course.placement.type === "range")
+        ? <p className={styles.warning}>원본에 학기 구분이 없는 과목은 선택 학년에 적용되는 참고 과목으로 표시됩니다.</p>
+        : null}
       <div className={styles.rows}>{roadmap.courses.map((course) => (
         <div className={styles.row} key={course.id}>
           <input aria-label="과목명" value={course.printedCourseName} onChange={(e) => replace(updateRoadmapCourse(roadmap, course.id, { printedCourseName: e.target.value }))} />

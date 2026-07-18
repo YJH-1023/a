@@ -45,7 +45,10 @@ export function confirmCurriculumRoadmap(value: CurriculumRoadmap): CurriculumRo
   return { ...value, status: "confirmed", reviewReasons: [], courses: value.courses.map((course) => ({ ...course, reviewStatus: "verified", reviewReasons: [] })) };
 }
 
-/** Keep only courses visibly placed in the requested grade/semester cell. */
+/**
+ * Keep exact target-cell courses plus year/range courses that explicitly cover
+ * the requested grade. Semester-less entries remain advisory for both terms.
+ */
 export function validateRoadmapForTarget(
   value: CurriculumRoadmap,
   context: Pick<RoadmapContext, "currentGrade" | "semester">,
@@ -54,8 +57,14 @@ export function validateRoadmapForTarget(
   const courses = value.courses.flatMap((course) => {
     const key = normalize(course.printedCourseName);
     if (!key || seen.has(key)) return [];
-    if (course.placement.type !== "exact") return [];
-    if (course.placement.grade !== context.currentGrade || course.placement.semester !== context.semester) return [];
+    const applies = course.placement.type === "exact"
+      ? course.placement.grade === context.currentGrade && course.placement.semester === context.semester
+      : course.placement.type === "year_only"
+        ? course.placement.grade === context.currentGrade
+        : course.placement.type === "range"
+          ? context.currentGrade >= course.placement.fromGrade && context.currentGrade <= course.placement.toGrade
+          : false;
+    if (!applies) return [];
     seen.add(key);
     return [course];
   });

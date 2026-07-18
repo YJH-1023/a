@@ -34,7 +34,7 @@ semester_grid일 때만 상단의 '${currentGrade}학년' 영역과 그 안의 '
   let response: Response;
   const primaryModel = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
   const fallbackModel = process.env.GEMINI_FALLBACK_MODEL?.trim() || "gemini-2.5-flash-lite";
-  const requestPayload = { model: primaryModel, store: false, input: [{ type: "text", text: prompt }, { type: "image", data: Buffer.from(await image.arrayBuffer()).toString("base64"), mime_type: image.type }], response_format: { type: "text", mime_type: "application/json", schema }, generation_config: { thinking_level: "minimal" } };
+  const requestPayload = { model: primaryModel, store: false, input: [{ type: "text", text: prompt }, { type: "image", data: Buffer.from(await image.arrayBuffer()).toString("base64"), mime_type: image.type }], response_format: { type: "text", mime_type: "application/json", schema }, generation_config: { thinking_level: "low" } };
   try {
     response = await fetchGeminiWithFallback(apiKey, requestPayload, fallbackModel);
   } catch { return fail(502, "Gemini 비전 API에 연결하지 못했습니다."); }
